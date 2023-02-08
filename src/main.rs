@@ -35,15 +35,20 @@ async fn main()
     let gb_texture = Texture2D::from_image(&gb_image);
 
     // EMULATOR
-    let emulator : Emulator = Emulator::init_emulator();
+    let mut gb_emulator : Emulator = Emulator::init_emulator();
 
-
+    // LOAD ROM
+    gb_emulator.load_rom("roms/tetris.gb");
 
     loop {
         // CLEAR
         clear_background(BLACK);
 
         // EMULATION CYCLE
+        if !gb_emulator.emulation_cycle()
+        {
+            break;
+        }
 
         // DRAW
         gb_texture.update(&gb_image);
