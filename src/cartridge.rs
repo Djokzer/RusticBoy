@@ -65,6 +65,8 @@ impl Cartridge
 	
 	pub fn load_cartridge(&mut self, filename : &str, data : Vec<u8>)
 	{
+		println!("--------------------------------------------------------------");
+
 		self.filename = filename.to_string(); //Copy the filename
 		
 		self.data = data;	//Get the rom data
@@ -74,7 +76,8 @@ impl Cartridge
 		self.header.print_header();	//Print the header
 		
 		self.header.check_header_checksum(&self.data);	//Check the header checksum
-		
+
+		println!("--------------------------------------------------------------");
 	}
 	
 	pub fn get_header(&mut self)
@@ -177,5 +180,7 @@ impl CartridgeHeader
 		println!("ROM Version: {}", self.mask_rom_version);	//Print the ROM version
 		println!("Header Checksum: {}", self.header_checksum);	//Print the header checksum
 		println!("Global Checksum: {}", self.global_checksum);	//Print the global checksum
+
+		
 	}
 }

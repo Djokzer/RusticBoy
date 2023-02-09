@@ -1,11 +1,11 @@
 
 pub struct Flag
 {
-	value : u8,				//Flag 8-bit value
-	zero_flag : bool,		//Bit 7
-	sub_flag : bool,		//Bit 6
-	half_carry_flag : bool,	//Bit 5
-	carry_flag : bool,		//Bit 4
+	pub value : u8,				//Flag 8-bit value
+	pub zero_flag : bool,		//Bit 7
+	pub sub_flag : bool,		//Bit 6
+	pub half_carry_flag : bool,	//Bit 5
+	pub carry_flag : bool,		//Bit 4
 }
 
 pub struct Register
@@ -92,21 +92,21 @@ impl Register
 		}
 	}
 
-	pub fn get_af(&mut self) -> u16
+	pub fn get_af(&self) -> u16
 	{
-		return (self.a << 8) as u16 | self.f.value as u16;
+		return ((self.h as u16) << 8) | self.f.value as u16;
 	}
-	pub fn get_bc(&mut self) -> u16
+	pub fn get_bc(&self) -> u16
 	{
-		return (self.b << 8) as u16 | self.c as u16;
+		return ((self.b as u16) << 8) | self.c as u16;
 	}
-	pub fn get_de(&mut self) -> u16
+	pub fn get_de(&self) -> u16
 	{
-		return (self.d << 8) as u16 | self.e as u16;
+		return ((self.d as u16) << 8) | self.e as u16;
 	}
-	pub fn get_hl(&mut self) -> u16
+	pub fn get_hl(&self) -> u16
 	{
-		return (self.h << 8) as u16 | self.l as u16;
+		return ((self.h as u16) << 8) | self.l as u16;
 	}
 
 	pub fn set_af(&mut self, value : u16)
