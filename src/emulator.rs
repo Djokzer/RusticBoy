@@ -72,7 +72,6 @@ impl Emulator
 		// ! CPU STEP
 		let cycles = self.cpu.step(&mut self.mem_bus);
 
-
 		// ! PPU STEP
 		// ! APU STEP
 
