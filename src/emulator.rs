@@ -1,5 +1,6 @@
 use crate::cartridge::*;
 use crate::bus::*;
+use crate::cpu::*;
 
 use std::{fs::{metadata, File}, io::Read};
 
@@ -7,7 +8,8 @@ pub struct Emulator
 {
 	pub cart : Cartridge,
 	pub mem_bus : MemoryBus,
-	//TO DO
+	pub cpu: Cpu,
+	// ! TO DO
 }
 
 
@@ -19,7 +21,31 @@ impl Emulator
 		{
 			cart : Cartridge::init_cartridge(),
 			mem_bus : MemoryBus::init_bus(),
+			cpu : Cpu::init_cpu(),
 		}
+	}
+
+	pub fn load_boot_rom(&mut self, filename : &str) -> bool
+	{
+		// READ BOOT ROM
+		let mut f = match File::open(filename) {
+			Ok(file) => file,
+			Err(err) => {
+				println!("Error: {}", err);
+				return false;
+			}
+		};
+		let metadata = metadata(filename).expect("unable to read metadata");
+		let mut buffer = vec![0; metadata.len() as usize];
+		f.read(&mut buffer).expect("buffer overflow");
+
+		// LOAD BOOT ROM
+		for i in 0x0000..0x0100
+		{
+			self.mem_bus.write_byte(i, buffer[i as usize]);
+		}
+
+		return true;
 	}
 	
 	pub fn load_rom(&mut self, filename : &str)
@@ -34,16 +60,23 @@ impl Emulator
 		self.cart.load_cartridge(filename, buffer);
 
 		//FOR NOW NO MBC, COPY THE 32KB ROM INTO THE MEMORY BUS
-		for i in 0x0000..0x7FFF
+		for i in 0x0100..0x7FFF
 		{
-			self.mem_bus.write_byte(i, self.cart.data[i as usize]); 
+			self.mem_bus.write_byte(i, self.cart.data[(i - 0x100) as usize]); 
 		}
 	}
 
-	pub fn emulation_cycle(&mut self) -> bool
+	pub fn emulation_cycle(&mut self) -> u32
 	{
-		//TO DO
-		return false;
+		// ! TO DO
+		// ! CPU STEP
+		let cycles = self.cpu.step(&mut self.mem_bus);
+
+
+		// ! PPU STEP
+		// ! APU STEP
+
+		return cycles;
 	}
 }
 

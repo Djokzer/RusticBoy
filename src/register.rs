@@ -1,6 +1,4 @@
-//IMPORT
 
-//STRUCT
 pub struct Flag
 {
 	value : u8,				//Flag 8-bit value
@@ -20,43 +18,25 @@ pub struct Register
 	pub e : u8,
 	pub h : u8,
 	pub l : u8,
-	pub stack_pointer : u16,
 	pub program_counter : u16,
+	pub stack_pointer : u16,
 }
 
-//INIT STRUCTS
-pub fn init_flag() -> Flag
-{
-	Flag
-	{
-		value : 0,
-		zero_flag : false,
-		sub_flag : false,
-		half_carry_flag : false,
-		carry_flag : false,
-	}
-}
-
-pub fn init_register() -> Register
-{
-	Register
-	{
-		a : 0,
-		f : init_flag(),
-		b : 0,
-		c : 0,
-		d : 0,
-		e : 0,
-		h : 0,
-		l : 0,
-		stack_pointer : 0,
-		program_counter : 0x100, //After the cartridge header
-	}
-}
-
-//STRUCT FUNCTIONS
 impl Flag
 {
+	//INIT FLAG
+	pub fn init_flag() -> Flag
+	{
+		Flag
+		{
+			value : 0xb0,
+			zero_flag : true,
+			sub_flag : false,
+			half_carry_flag : true,
+			carry_flag : true,
+		}
+	}
+	
 	pub fn set_zero_flag(&mut self, val : bool)
 	{
 		self.zero_flag = val;
@@ -94,6 +74,24 @@ impl Flag
 
 impl Register
 {
+	//INIT REGISTER
+	pub fn init_register() -> Register
+	{
+		Register
+		{
+			a : 0x01,
+			f : Flag::init_flag(),
+			b : 0x00,
+			c : 0x13,
+			d : 0x00,
+			e : 0xd8,
+			h : 0x01,
+			l : 0x4d,
+			program_counter : 0x00, //0x100 if skip boot rom
+			stack_pointer : 0xFFFE,
+		}
+	}
+
 	pub fn get_af(&mut self) -> u16
 	{
 		return (self.a << 8) as u16 | self.f.value as u16;

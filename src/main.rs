@@ -2,7 +2,9 @@ mod emulator;
 mod cartridge;
 mod bus;
 mod register;
+mod cpu;
 
+use std::{time::{SystemTime, Duration}};
 use macroquad::{prelude::*};
 use emulator::Emulator;
 
@@ -36,24 +38,45 @@ async fn main()
 
     // EMULATOR
     let mut gb_emulator : Emulator = Emulator::init_emulator();
+    if !gb_emulator.load_boot_rom("roms/dmg_boot.bin")
+    {
+        gb_emulator.cpu.reg.program_counter = 0x100; // SKIP ROM BOOT
+    }
+    gb_emulator.load_rom("roms/tetris.gb"); // LOAD ROM
 
-    // LOAD ROM
-    gb_emulator.load_rom("roms/tetris.gb");
+    // CLOCK
+    const CLOCK_SPEED: u32 = 4_194_304; // Hz
+    const CYCLES_PER_FRAME: u32 = 70224;  // (CLOCK SPEED / REFRESH RATE)
+    const TARGET_WAIT_TIME: u64 = 1666666667;
+    let mut cycles : u32 = 0;
+    let mut start_time = SystemTime::now();
 
     loop {
-        // CLEAR
+        // CLEAR SCREEN
         clear_background(BLACK);
 
+
         // EMULATION CYCLE
-        if !gb_emulator.emulation_cycle()
+        cycles += gb_emulator.emulation_cycle();
+
+        if cycles >= CYCLES_PER_FRAME
         {
-            break;
+            cycles = 0;
+
+            // RENDER
+            gb_texture.update(&gb_image);
+            draw_texture(gb_texture, 0.0, 0.0, WHITE);
+
+            // WAIT
+            let elapsed_time = start_time.elapsed().unwrap().as_nanos() as u64;
+            if elapsed_time < TARGET_WAIT_TIME
+            {
+                let sleep_time = Duration::from_nanos(TARGET_WAIT_TIME - elapsed_time);
+                std::thread::sleep(sleep_time);
+            }
+
+            start_time = SystemTime::now();
         }
-
-        // DRAW
-        gb_texture.update(&gb_image);
-        draw_texture(gb_texture, 0.0, 0.0, WHITE);
-
 
         // CHECK IF ESC
         if is_key_down(KeyCode::Escape)

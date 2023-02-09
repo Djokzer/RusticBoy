@@ -1,6 +1,4 @@
-//IMPORT
 
-//STRUCT
 pub struct MemoryBus
 {
 	pub rom_bank_0 : [u8; 0x4000],		//16KB ROM Bank 0			(0x0000	-	0x3FFF)
