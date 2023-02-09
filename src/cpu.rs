@@ -41,6 +41,8 @@ impl Cpu
                 self.reg.program_counter += 2;
                 12   
             },
+            0x04 => Cpu::inc_r(&mut self.reg.f, &mut self.reg.b), // INC B 
+            0x0c => Cpu::inc_r(&mut self.reg.f, &mut self.reg.c), // INC C   
             0x0e => // LD C, d8
             {
                 self.reg.c = n;
@@ -53,11 +55,13 @@ impl Cpu
                 self.reg.program_counter += 2;
                 12   
             },
+            0x14 => Cpu::inc_r(&mut self.reg.f, &mut self.reg.d), // INC D
             0x18 => // JR r8,
             {
                 self.reg.program_counter = Cpu::add_signed(self.reg.program_counter, n as u16); //RELATIVE JUMP
                 12
             },
+            0x1c => Cpu::inc_r(&mut self.reg.f, &mut self.reg.e), // INC E
             0x1e => // LD E, d8
             {
                 self.reg.e = n;
@@ -86,6 +90,7 @@ impl Cpu
                 self.reg.set_hl(self.reg.get_hl() + 1);
                 8
             },
+            0x24 => Cpu::inc_r(&mut self.reg.f, &mut self.reg.h), // INC H
             0x28 => // JR Z, r8,
             {
                 if self.reg.f.zero_flag
@@ -96,6 +101,7 @@ impl Cpu
                 self.reg.program_counter += 1;
                 return  8;
             },
+            0x2c => Cpu::inc_r(&mut self.reg.f, &mut self.reg.l), // INC L
             0x2e => // LD L, d8
             {
                 self.reg.l = n;
@@ -118,6 +124,15 @@ impl Cpu
                 self.reg.set_hl(self.reg.get_hl() - 1);
                 8
             },
+            0x34 => // ! INC (HL)
+            {
+                let hl = self.reg.get_hl();
+                self.reg.f.half_carry_flag = (hl & 0xF) == 0xF;
+                self.reg.set_hl(hl + 1);
+                self.reg.f.set_zero_flag(self.reg.get_hl() == 0);
+                self.reg.f.set_sub_flag(false);
+                12
+            },
             0x31 => // LD SP, d16
             {
                 self.reg.stack_pointer = nn;
@@ -134,6 +149,7 @@ impl Cpu
                 self.reg.program_counter += 1;
                 return  8;
             },
+            0x3c => Cpu::inc_r(&mut self.reg.f, &mut self.reg.a), // INC A
             0x3e => // LD A, d8
             {
                 self.reg.a = n;
@@ -218,4 +234,13 @@ impl Cpu
         return val_1 - val_2;
     }
 
+    pub fn inc_r(flags : &mut Flag, reg : &mut u8) -> u32
+    {   
+        flags.half_carry_flag = (*reg & 0xF) == 0xF;
+        *reg += 1;
+        flags.set_zero_flag(*reg == 0);
+        flags.set_sub_flag(false);
+
+        return 4
+    }
 }
