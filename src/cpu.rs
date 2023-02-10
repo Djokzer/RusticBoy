@@ -84,9 +84,9 @@ impl Cpu
                 self.reg.program_counter += 2;
                 12   
             },
-            0x22 => // LD HL+, A
-            {
-                self.reg.set_hl(self.reg.a as u16);
+            0x22 => // LD (HL+), A
+            {   
+                mem_bus.write_byte(self.reg.get_hl(), self.reg.a);
                 self.reg.set_hl(self.reg.get_hl() + 1);
                 8
             },
@@ -118,26 +118,27 @@ impl Cpu
                 self.reg.program_counter += 1;
                 return  8;
             },
-            0x32 => // LD HL-, A
-            {
-                self.reg.set_hl(self.reg.a as u16);
-                self.reg.set_hl(self.reg.get_hl() - 1);
-                8
-            },
-            0x34 => // ! INC (HL)
-            {
-                let hl = self.reg.get_hl();
-                self.reg.f.half_carry_flag = (hl & 0xF) == 0xF;
-                self.reg.set_hl(hl + 1);
-                self.reg.f.set_zero_flag(self.reg.get_hl() == 0);
-                self.reg.f.set_sub_flag(false);
-                12
-            },
             0x31 => // LD SP, d16
             {
                 self.reg.stack_pointer = nn;
                 self.reg.program_counter += 2;
                 12   
+            },
+            0x32 => // LD (HL-), A
+            {
+                mem_bus.write_byte(self.reg.get_hl(), self.reg.a);
+                self.reg.set_hl(self.reg.get_hl() - 1);
+                8
+            },
+            0x34 => // INC (HL)
+            {
+                let mut data = mem_bus.read_byte(self.reg.get_hl());
+                self.reg.f.half_carry_flag = (data & 0x0F) == 0x0F;
+                data += 1;
+                mem_bus.write_byte(self.reg.get_hl(), data);
+                self.reg.f.set_zero_flag(data == 0);
+                self.reg.f.set_sub_flag(false);
+                12
             },
             0x38 => // JR C, r8,
             {
@@ -156,6 +157,13 @@ impl Cpu
                 self.reg.program_counter += 1;
                 8   
             },
+            0x70 => self.ld_r_to_mem_hl(mem_bus, self.reg.b),   // LD (HL), B
+            0x71 => self.ld_r_to_mem_hl(mem_bus, self.reg.c),   // LD (HL), C
+            0x72 => self.ld_r_to_mem_hl(mem_bus, self.reg.d),   // LD (HL), D
+            0x73 => self.ld_r_to_mem_hl(mem_bus, self.reg.e),   // LD (HL), E
+            0x74 => self.ld_r_to_mem_hl(mem_bus, self.reg.h),   // LD (HL), H
+            0x75 => self.ld_r_to_mem_hl(mem_bus, self.reg.l),   // LD (HL), L
+            0x77 => self.ld_r_to_mem_hl(mem_bus, self.reg.a),   // LD (HL), A
             0xA8 => self.xor_a_r(self.reg.b),  // XOR A, B
             0xA9 => self.xor_a_r(self.reg.c),  // XOR A, C
             0xAA => self.xor_a_r(self.reg.d),  // XOR A, D
@@ -242,5 +250,11 @@ impl Cpu
         flags.set_sub_flag(false);
 
         return 4
+    }
+
+    pub fn ld_r_to_mem_hl(&self, mem_bus : &mut MemoryBus, reg : u8) -> u32
+    {
+        mem_bus.write_byte(self.reg.get_hl(), reg);
+        8
     }
 }
