@@ -50,8 +50,8 @@ impl MemoryBus
 
 	pub fn read_short(&self, address : u16) -> u16
 	{
-		let hl: u16 = self.read_byte(address) as u16;
-		let lo: u16 = self.read_byte(address + 1) as u16 ;
+		let lo: u16 = self.read_byte(address) as u16;
+		let hl: u16 = self.read_byte(address + 1) as u16 ;
 		return (hl << 8) | (lo & 0x00FF);
 	}
 
@@ -70,5 +70,13 @@ impl MemoryBus
 			0xFFFF => self.interrupt_enable = value,
 			_ => (),
 		}
+	}
+
+	pub fn write_short(&mut self, address : u16, value : u16)
+	{
+		let hl: u8 = ((value >> 8) & 0x00FF) as u8;
+		let lo: u8 = (value & 0x00FF) as u8;
+		self.write_byte(address, hl);
+		self.write_byte(address + 1, lo);
 	}
 }

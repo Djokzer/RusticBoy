@@ -1,4 +1,3 @@
-use crate::register;
 use crate::register::*;
 use crate::bus::*;
 use std::process;
@@ -42,6 +41,7 @@ impl Cpu
                 12   
             },
             0x04 => Cpu::inc_r(&mut self.reg.f, &mut self.reg.b), // INC B 
+            0x0A => self.ld_mem_rr_to_a(mem_bus, self.reg.get_bc()),      // LD A,(BC)
             0x0c => Cpu::inc_r(&mut self.reg.f, &mut self.reg.c), // INC C   
             0x0e => // LD C, d8
             {
@@ -50,19 +50,20 @@ impl Cpu
                 8   
             },
             0x11 => // LD DE, d16
-            {
+            { 
                 self.reg.set_de(mem_bus.read_short(nn));
                 self.reg.program_counter += 2;
                 12   
             },
-            0x14 => Cpu::inc_r(&mut self.reg.f, &mut self.reg.d), // INC D
+            0x14 => Cpu::inc_r(&mut self.reg.f, &mut self.reg.d),   // INC D
             0x18 => // JR r8,
             {
                 self.reg.program_counter = Cpu::add_signed(self.reg.program_counter, n as u16); //RELATIVE JUMP
                 12
             },
-            0x1c => Cpu::inc_r(&mut self.reg.f, &mut self.reg.e), // INC E
-            0x1e => // LD E, d8
+            0x1A => self.ld_mem_rr_to_a(mem_bus, self.reg.get_de()),        // LD A,(DE)
+            0x1C => Cpu::inc_r(&mut self.reg.f, &mut self.reg.e),   // INC E
+            0x1E => // LD E, d8
             {
                 self.reg.e = n;
                 self.reg.program_counter += 1;
@@ -157,6 +158,20 @@ impl Cpu
                 self.reg.program_counter += 1;
                 8   
             },
+            0x40 => Cpu::ld_r_to_r(&mut self.reg.b, self.reg.a), // LD B,A
+            0x41 => Cpu::ld_r_to_r(&mut self.reg.b, self.reg.a), // LD B,A
+            0x42 => Cpu::ld_r_to_r(&mut self.reg.b, self.reg.a), // LD B,A
+            0x43 => Cpu::ld_r_to_r(&mut self.reg.b, self.reg.a), // LD B,A
+            0x44 => Cpu::ld_r_to_r(&mut self.reg.b, self.reg.a), // LD B,A
+            0x45 => Cpu::ld_r_to_r(&mut self.reg.b, self.reg.a), // LD B,A
+            0x47 => Cpu::ld_r_to_r(&mut self.reg.b, self.reg.a), // LD B,A
+            0x48 => Cpu::ld_r_to_r(&mut self.reg.c, self.reg.b), // LD C,B 
+            0x49 => 4,                                                        // LD C,C (NOP)
+            0x4A => Cpu::ld_r_to_r(&mut self.reg.c, self.reg.d), // LD C,D
+            0x4B => Cpu::ld_r_to_r(&mut self.reg.c, self.reg.e), // LD C,E
+            0x4C => Cpu::ld_r_to_r(&mut self.reg.c, self.reg.h), // LD C,H
+            0x4D => Cpu::ld_r_to_r(&mut self.reg.c, self.reg.l), // LD C,L
+            0x4F => Cpu::ld_r_to_r(&mut self.reg.c, self.reg.a), // LD C,A
             0x70 => self.ld_r_to_mem_hl(mem_bus, self.reg.b),   // LD (HL), B
             0x71 => self.ld_r_to_mem_hl(mem_bus, self.reg.c),   // LD (HL), C
             0x72 => self.ld_r_to_mem_hl(mem_bus, self.reg.d),   // LD (HL), D
@@ -171,11 +186,31 @@ impl Cpu
             0xAC => self.xor_a_r(self.reg.h),  // XOR A, H
             0xAD => self.xor_a_r(self.reg.l),  // XOR A, L
             0xAF => self.xor_a_r(self.reg.a),  // XOR A, A
-            0xCB => self.cb_inst_set(mem_bus),  // 0xCB INSTRCTION SET 
+            0xCB => self.cb_inst_set(mem_bus),      // 0xCB INSTRCTION SET
+            0xCD => //  CALL d16
+            {
+                self.reg.program_counter += 2;
+                self.push_short(mem_bus, self.reg.program_counter);
+                self.reg.program_counter = nn;
+                24
+
+            },
+            0xE0 => // LDH (a8),A
+            {
+                mem_bus.write_byte(0xFF00 + n as u16, self.reg.a);
+                self.reg.program_counter += 1;
+                12
+            },
             0xE2 => // LD (FF00+C), A   
             {
                 mem_bus.write_byte(0xFF00 + self.reg.c as u16, self.reg.a);
                 8
+            },
+            0xF0 => // LDH A,(a8)
+            {
+                self.reg.a = mem_bus.read_byte(0xFF00 + n as u16);
+                self.reg.program_counter += 1;
+                12
             },
             0xF2 => // LD A, (FF00+C) 
             {
@@ -205,7 +240,6 @@ impl Cpu
                 process::exit(1);
             },
         }
-
 
         if (op & 0x0F == 0x06) || (op & 0x0F == 0x0E)
         {
@@ -256,5 +290,23 @@ impl Cpu
     {
         mem_bus.write_byte(self.reg.get_hl(), reg);
         8
+    }
+
+    pub fn ld_mem_rr_to_a(&mut self, mem_bus : &MemoryBus, rr : u16) -> u32
+    {
+        self.reg.a = mem_bus.read_byte(rr);
+        8
+    }
+
+    pub fn push_short(&mut self, mem_bus : &mut MemoryBus, short : u16)
+    {
+        self.reg.stack_pointer -= 2;
+        mem_bus.write_short(self.reg.stack_pointer, short);
+    }   
+
+    pub fn ld_r_to_r(r_dst : &mut u8, r_src : u8) -> u32
+    {
+        *r_dst = r_src;
+        4
     }
 }
