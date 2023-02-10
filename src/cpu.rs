@@ -41,14 +41,10 @@ impl Cpu
                 12   
             },
             0x04 => Cpu::inc_r(&mut self.reg.f, &mut self.reg.b), // INC B 
+            0x06 => Cpu::ld_n_to_r(&mut self.reg.b, n, &mut self.reg.program_counter),   // LD B,d8
             0x0A => self.ld_mem_rr_to_a(mem_bus, self.reg.get_bc()),      // LD A,(BC)
             0x0c => Cpu::inc_r(&mut self.reg.f, &mut self.reg.c), // INC C   
-            0x0e => // LD C, d8
-            {
-                self.reg.c = n;
-                self.reg.program_counter += 1;
-                8   
-            },
+            0x0e => Cpu::ld_n_to_r(&mut self.reg.c, n, &mut self.reg.program_counter),  // LD C, d8
             0x11 => // LD DE, d16
             { 
                 self.reg.set_de(mem_bus.read_short(nn));
@@ -56,6 +52,7 @@ impl Cpu
                 12   
             },
             0x14 => Cpu::inc_r(&mut self.reg.f, &mut self.reg.d),   // INC D
+            0x16 => Cpu::ld_n_to_r(&mut self.reg.d, n, &mut self.reg.program_counter),   // LD D,d8
             0x18 => // JR r8,
             {
                 self.reg.program_counter = Cpu::add_signed(self.reg.program_counter, n as u16); //RELATIVE JUMP
@@ -63,12 +60,7 @@ impl Cpu
             },
             0x1A => self.ld_mem_rr_to_a(mem_bus, self.reg.get_de()),        // LD A,(DE)
             0x1C => Cpu::inc_r(&mut self.reg.f, &mut self.reg.e),   // INC E
-            0x1E => // LD E, d8
-            {
-                self.reg.e = n;
-                self.reg.program_counter += 1;
-                8   
-            },
+            0x1E => Cpu::ld_n_to_r(&mut self.reg.e, n, &mut self.reg.program_counter),  // LD E, d8
             0x20 => // JR NZ, r8,
             {
                 if !self.reg.f.zero_flag
@@ -92,6 +84,7 @@ impl Cpu
                 8
             },
             0x24 => Cpu::inc_r(&mut self.reg.f, &mut self.reg.h), // INC H
+            0x26 => Cpu::ld_n_to_r(&mut self.reg.h, n, &mut self.reg.program_counter),   // LD H,d8
             0x28 => // JR Z, r8,
             {
                 if self.reg.f.zero_flag
@@ -103,12 +96,7 @@ impl Cpu
                 return  8;
             },
             0x2c => Cpu::inc_r(&mut self.reg.f, &mut self.reg.l), // INC L
-            0x2e => // LD L, d8
-            {
-                self.reg.l = n;
-                self.reg.program_counter += 1;
-                8   
-            },
+            0x2e => Cpu::ld_n_to_r(&mut self.reg.l, n, &mut self.reg.program_counter), // LD L, d8
             0x30 => // JR NC, r8,
             {
                 if !self.reg.f.carry_flag
@@ -152,12 +140,7 @@ impl Cpu
                 return  8;
             },
             0x3c => Cpu::inc_r(&mut self.reg.f, &mut self.reg.a), // INC A
-            0x3e => // LD A, d8
-            {
-                self.reg.a = n;
-                self.reg.program_counter += 1;
-                8   
-            },
+            0x3e => Cpu::ld_n_to_r(&mut self.reg.a, n, &mut self.reg.program_counter), // LD A, d8
             0x40 => Cpu::ld_r_to_r(&mut self.reg.b, self.reg.a), // LD B,A
             0x41 => Cpu::ld_r_to_r(&mut self.reg.b, self.reg.a), // LD B,A
             0x42 => Cpu::ld_r_to_r(&mut self.reg.b, self.reg.a), // LD B,A
@@ -308,5 +291,12 @@ impl Cpu
     {
         *r_dst = r_src;
         4
+    }
+
+    pub fn ld_n_to_r(r_dst : &mut u8, n : u8, pc : &mut u16) -> u32
+    {
+        *r_dst = n;
+        *pc += 1;
+        8
     }
 }
