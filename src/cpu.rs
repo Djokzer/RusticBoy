@@ -42,7 +42,7 @@ impl Cpu
             },
             0x04 => Cpu::inc_r(&mut self.reg.f, &mut self.reg.b), // INC B 
             0x06 => Cpu::ld_n_to_r(&mut self.reg.b, n, &mut self.reg.program_counter),   // LD B,d8
-			0x17 =>	// RLCA
+			0x07 =>	// RLCA
 			{
 				self.reg.f.set_caryy_flag((self.reg.a & 0x80) == 0x80);
 				self.reg.a = self.reg.a << 1;
