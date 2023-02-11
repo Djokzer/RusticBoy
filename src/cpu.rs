@@ -40,7 +40,9 @@ impl Cpu
                 self.reg.program_counter += 2;
                 12   
             },
-            0x04 => Cpu::inc_r(&mut self.reg.f, &mut self.reg.b), // INC B 
+			0x03 => self.inc_rr("BC"),// INC BC
+            0x04 => Cpu::inc_r(&mut self.reg.f, &mut self.reg.b),	// INC B 
+			0x05 => Cpu::dec_r(&mut self.reg.f, &mut self.reg.b),	// DEC B 
             0x06 => Cpu::ld_n_to_r(&mut self.reg.b, n, &mut self.reg.program_counter),   // LD B,d8
 			0x07 =>	// RLCA
 			{
@@ -55,8 +57,9 @@ impl Cpu
 				self.reg.f.set_half_carry_flag(false);
 				4
 			},
-            0x0A => self.ld_mem_rr_to_a(mem_bus, self.reg.get_bc()),      // LD A,(BC)
-            0x0c => Cpu::inc_r(&mut self.reg.f, &mut self.reg.c), // INC C   
+            0x0A => self.ld_mem_rr_to_a(mem_bus, self.reg.get_bc()),		// LD A,(BC)
+            0x0c => Cpu::inc_r(&mut self.reg.f, &mut self.reg.c),	// INC C  
+			0x0d => Cpu::dec_r(&mut self.reg.f, &mut self.reg.c),	// DEC C 
             0x0e => Cpu::ld_n_to_r(&mut self.reg.c, n, &mut self.reg.program_counter),  // LD C, d8
 			0x0F =>	// RRCA
 			{
@@ -77,7 +80,9 @@ impl Cpu
                 self.reg.program_counter += 2;
                 12   
             },
+			0x13 => self.inc_rr("DE"),// INC DE
             0x14 => Cpu::inc_r(&mut self.reg.f, &mut self.reg.d),   // INC D
+			0x15 => Cpu::dec_r(&mut self.reg.f, &mut self.reg.d),	// DEC D
             0x16 => Cpu::ld_n_to_r(&mut self.reg.d, n, &mut self.reg.program_counter),   // LD D,d8
 			0x17 =>	// RLA
 			{
@@ -95,11 +100,12 @@ impl Cpu
 			},
             0x18 => // JR r8,
             {
-                self.reg.program_counter = Cpu::add_signed(self.reg.program_counter, n as u16); //RELATIVE JUMP
+                self.reg.program_counter = Cpu::add_signed(self.reg.program_counter, n); //RELATIVE JUMP
                 12
             },
             0x1A => self.ld_mem_rr_to_a(mem_bus, self.reg.get_de()),        // LD A,(DE)
             0x1C => Cpu::inc_r(&mut self.reg.f, &mut self.reg.e),   // INC E
+			0x1D => Cpu::dec_r(&mut self.reg.f, &mut self.reg.e),	// DEC E
             0x1E => Cpu::ld_n_to_r(&mut self.reg.e, n, &mut self.reg.program_counter),  // LD E, d8
 			0x1F =>	// RRA
 			{
@@ -115,14 +121,14 @@ impl Cpu
 				self.reg.f.set_half_carry_flag(false);
 				4
 			}
-            0x20 => // JR NZ, r8,
+            0x20 => // JR NZ, r8
             {
+				self.reg.program_counter += 1;
                 if !self.reg.f.zero_flag
                 {
-                    self.reg.program_counter = Cpu::add_signed(self.reg.program_counter, n as u16); //RELATIVE JUMP
+                    self.reg.program_counter = Cpu::add_signed(self.reg.program_counter, n); //RELATIVE JUMP
                     return 12;
                 }
-                self.reg.program_counter += 1;
                 return  8;
             },
             0x21 => // LD HL, d16
@@ -137,25 +143,28 @@ impl Cpu
                 self.reg.set_hl(self.reg.get_hl() + 1);
                 8
             },
+			0x23 => self.inc_rr("HL"),// INC HL
             0x24 => Cpu::inc_r(&mut self.reg.f, &mut self.reg.h), // INC H
+			0x25 => Cpu::dec_r(&mut self.reg.f, &mut self.reg.h),	// DEC H 
             0x26 => Cpu::ld_n_to_r(&mut self.reg.h, n, &mut self.reg.program_counter),   // LD H,d8
             0x28 => // JR Z, r8,
             {
                 if self.reg.f.zero_flag
                 {
-                    self.reg.program_counter = Cpu::add_signed(self.reg.program_counter, n as u16); //RELATIVE JUMP
+                    self.reg.program_counter = Cpu::add_signed(self.reg.program_counter, n); //RELATIVE JUMP
                     return 12;
                 }
                 self.reg.program_counter += 1;
                 return  8;
             },
-            0x2c => Cpu::inc_r(&mut self.reg.f, &mut self.reg.l), // INC L
+            0x2c => Cpu::inc_r(&mut self.reg.f, &mut self.reg.l),	// INC L
+			0x2D => Cpu::dec_r(&mut self.reg.f, &mut self.reg.l),	// DEC L
             0x2e => Cpu::ld_n_to_r(&mut self.reg.l, n, &mut self.reg.program_counter), // LD L, d8
             0x30 => // JR NC, r8,
             {
                 if !self.reg.f.carry_flag
                 {
-                    self.reg.program_counter = Cpu::add_signed(self.reg.program_counter, n as u16); //RELATIVE JUMP
+                    self.reg.program_counter = Cpu::add_signed(self.reg.program_counter, n); //RELATIVE JUMP
                     return 12;
                 }
                 self.reg.program_counter += 1;
@@ -187,13 +196,14 @@ impl Cpu
             {
                 if self.reg.f.carry_flag
                 {
-                    self.reg.program_counter = Cpu::add_signed(self.reg.program_counter, n as u16); //RELATIVE JUMP
+                    self.reg.program_counter = Cpu::add_signed(self.reg.program_counter, n); //RELATIVE JUMP
                     return 12;
                 }
                 self.reg.program_counter += 1;
                 return  8;
             },
-            0x3c => Cpu::inc_r(&mut self.reg.f, &mut self.reg.a), // INC A
+            0x3C => Cpu::inc_r(&mut self.reg.f, &mut self.reg.a), // INC A
+			0x3D => Cpu::dec_r(&mut self.reg.f, &mut self.reg.a), // DEC A
             0x3e => Cpu::ld_n_to_r(&mut self.reg.a, n, &mut self.reg.program_counter), // LD A, d8
             0x40 => Cpu::ld_r_to_r(&mut self.reg.b, self.reg.a), // LD B,A
             0x41 => Cpu::ld_r_to_r(&mut self.reg.b, self.reg.a), // LD B,A
@@ -216,7 +226,7 @@ impl Cpu
             0x74 => self.ld_r_to_mem_hl(mem_bus, self.reg.h),   // LD (HL), H
             0x75 => self.ld_r_to_mem_hl(mem_bus, self.reg.l),   // LD (HL), L
             0x77 => self.ld_r_to_mem_hl(mem_bus, self.reg.a),   // LD (HL), A
-            0xA8 => self.xor_a_r(self.reg.b),  // XOR A, B
+            0xA8 => self.xor_a_r(self	.reg.b),  // XOR A, B
             0xA9 => self.xor_a_r(self.reg.c),  // XOR A, C
             0xAA => self.xor_a_r(self.reg.d),  // XOR A, D
             0xAB => self.xor_a_r(self.reg.e),  // XOR A, E
@@ -311,15 +321,15 @@ impl Cpu
         return 4;
     }
 
-    pub fn add_signed(val_1 : u16, val_2 : u16) -> u16
+    pub fn add_signed(val_1 : u16, val_2 : u8) -> u16
     {
-        let signed = val_2 as i16;
+        let signed = val_2 as i8;
 
         if signed >= 0
         {
-            return val_1 + val_2; 
+            return val_1 + val_2 as u16; 
         }
-        return val_1 - val_2;
+        return (val_1 as i32 + signed as i32) as u16;
     }
 
     pub fn inc_r(flags : &mut Flag, reg : &mut u8) -> u32
@@ -328,6 +338,33 @@ impl Cpu
         *reg += 1;
         flags.set_zero_flag(*reg == 0);
         flags.set_sub_flag(false);
+
+        return 4
+    }
+
+	pub fn inc_rr(&mut self, rr : &str) -> u32
+	{
+		match rr 
+		{
+			"BC" =>	self.reg.set_bc(self.reg.get_bc() + 1),
+			"DE" =>	self.reg.set_de(self.reg.get_de() + 1),
+			"HL" =>	self.reg.set_hl(self.reg.get_hl() + 1),
+			"SP" =>	self.reg.stack_pointer += 1,
+			_ => 
+			{
+				println!("Unknown register {} !", rr);
+				process::exit(1);
+			}	
+		}
+		8
+	}
+
+	pub fn dec_r(flags : &mut Flag, reg : &mut u8) -> u32
+    {   
+        *reg -= 1;
+        flags.set_half_carry_flag((*reg & 0xF) == 0xF);
+        flags.set_zero_flag(*reg == 0);
+        flags.set_sub_flag(true);
 
         return 4
     }
