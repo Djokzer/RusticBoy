@@ -42,9 +42,35 @@ impl Cpu
             },
             0x04 => Cpu::inc_r(&mut self.reg.f, &mut self.reg.b), // INC B 
             0x06 => Cpu::ld_n_to_r(&mut self.reg.b, n, &mut self.reg.program_counter),   // LD B,d8
+			0x17 =>	// RLCA
+			{
+				self.reg.f.set_caryy_flag((self.reg.a & 0x80) == 0x80);
+				self.reg.a = self.reg.a << 1;
+				if self.reg.f.carry_flag
+				{
+					self.reg.a |= 0x01;
+				}
+				self.reg.f.set_zero_flag(false);
+				self.reg.f.set_sub_flag(false);
+				self.reg.f.set_half_carry_flag(false);
+				4
+			},
             0x0A => self.ld_mem_rr_to_a(mem_bus, self.reg.get_bc()),      // LD A,(BC)
             0x0c => Cpu::inc_r(&mut self.reg.f, &mut self.reg.c), // INC C   
             0x0e => Cpu::ld_n_to_r(&mut self.reg.c, n, &mut self.reg.program_counter),  // LD C, d8
+			0x0F =>	// RRCA
+			{
+				self.reg.f.set_caryy_flag((self.reg.a & 0x01) == 0x01);
+				self.reg.a = self.reg.a >> 1;
+				if self.reg.f.carry_flag
+				{
+					self.reg.a |= 0x80;
+				}
+				self.reg.f.set_zero_flag(false);
+				self.reg.f.set_sub_flag(false);
+				self.reg.f.set_half_carry_flag(false);
+				4
+			}
             0x11 => // LD DE, d16
             { 
                 self.reg.set_de(mem_bus.read_short(nn));
@@ -53,6 +79,20 @@ impl Cpu
             },
             0x14 => Cpu::inc_r(&mut self.reg.f, &mut self.reg.d),   // INC D
             0x16 => Cpu::ld_n_to_r(&mut self.reg.d, n, &mut self.reg.program_counter),   // LD D,d8
+			0x17 =>	// RLA
+			{
+				let old_carry = self.reg.f.carry_flag;
+				self.reg.f.set_caryy_flag((self.reg.a & 0x80) == 0x80);
+				self.reg.a = self.reg.a << 1;
+				if old_carry
+				{
+					self.reg.a |= 0x01;
+				}
+				self.reg.f.set_zero_flag(false);
+				self.reg.f.set_sub_flag(false);
+				self.reg.f.set_half_carry_flag(false);
+				4
+			},
             0x18 => // JR r8,
             {
                 self.reg.program_counter = Cpu::add_signed(self.reg.program_counter, n as u16); //RELATIVE JUMP
@@ -61,6 +101,20 @@ impl Cpu
             0x1A => self.ld_mem_rr_to_a(mem_bus, self.reg.get_de()),        // LD A,(DE)
             0x1C => Cpu::inc_r(&mut self.reg.f, &mut self.reg.e),   // INC E
             0x1E => Cpu::ld_n_to_r(&mut self.reg.e, n, &mut self.reg.program_counter),  // LD E, d8
+			0x1F =>	// RRA
+			{
+				let old_carry = self.reg.f.carry_flag;
+				self.reg.f.set_caryy_flag((self.reg.a & 0x01) == 0x01);
+				self.reg.a = self.reg.a >> 1;
+				if old_carry
+				{
+					self.reg.a |= 0x80;
+				}
+				self.reg.f.set_zero_flag(false);
+				self.reg.f.set_sub_flag(false);
+				self.reg.f.set_half_carry_flag(false);
+				4
+			}
             0x20 => // JR NZ, r8,
             {
                 if !self.reg.f.zero_flag
@@ -169,6 +223,8 @@ impl Cpu
             0xAC => self.xor_a_r(self.reg.h),  // XOR A, H
             0xAD => self.xor_a_r(self.reg.l),  // XOR A, L
             0xAF => self.xor_a_r(self.reg.a),  // XOR A, A
+			0xC1 => self.pop_rr(&mem_bus, "BC"),// POP BC
+            0xC5 => self.push_rr(mem_bus, self.reg.get_bc()),   // PUSH BC
             0xCB => self.cb_inst_set(mem_bus),      // 0xCB INSTRCTION SET
             0xCD => //  CALL d16
             {
@@ -178,28 +234,34 @@ impl Cpu
                 24
 
             },
+			0xD1 => self.pop_rr(&mem_bus, "DE"),// POP DE
+            0xD5 => self.push_rr(mem_bus, self.reg.get_de()),   // PUSH DE
             0xE0 => // LDH (a8),A
             {
                 mem_bus.write_byte(0xFF00 + n as u16, self.reg.a);
                 self.reg.program_counter += 1;
                 12
             },
+			0xE1 => self.pop_rr(&mem_bus, "HL"),// POP HL
             0xE2 => // LD (FF00+C), A   
             {
                 mem_bus.write_byte(0xFF00 + self.reg.c as u16, self.reg.a);
                 8
             },
+            0xE5 => self.push_rr(mem_bus, self.reg.get_hl()),   // PUSH HL
             0xF0 => // LDH A,(a8)
             {
                 self.reg.a = mem_bus.read_byte(0xFF00 + n as u16);
                 self.reg.program_counter += 1;
                 12
             },
+			0xF1 => self.pop_rr(&mem_bus, "AF"),// POP AF
             0xF2 => // LD A, (FF00+C) 
             {
                 self.reg.a = mem_bus.read_byte(0xFF00 + self.reg.c as u16);
                 8
             },
+            0xF5 => self.push_rr(mem_bus, self.reg.get_af()),   // PUSH AF
             _=> {
                 println!("Unknown Opcode : {:02x}", opcode);
                 process::exit(1);
@@ -216,7 +278,8 @@ impl Cpu
 
         match op 
         {
-            0x7C => self.bit_test(self.reg.h, 7),
+            0x11 => Cpu::rl_r(&mut self.reg.c, &mut self.reg.f),		// RL C
+            0x7C => self.bit_test(self.reg.h, 7),				// BIT 7,H
             _=> {
                 println!("Unknown Opcode : {:02x}", op);
                 println!("STOPED AT PC : {:02x}", self.reg.program_counter);
@@ -261,7 +324,7 @@ impl Cpu
 
     pub fn inc_r(flags : &mut Flag, reg : &mut u8) -> u32
     {   
-        flags.half_carry_flag = (*reg & 0xF) == 0xF;
+        flags.set_half_carry_flag((*reg & 0xF) == 0xF);
         *reg += 1;
         flags.set_zero_flag(*reg == 0);
         flags.set_sub_flag(false);
@@ -287,6 +350,37 @@ impl Cpu
         mem_bus.write_short(self.reg.stack_pointer, short);
     }   
 
+	pub fn pop_short(&mut self, mem_bus : &MemoryBus) -> u16
+    {
+		let short = mem_bus.read_short(self.reg.stack_pointer);
+        self.reg.stack_pointer += 2;
+		return short;
+    }
+	
+	pub fn pop_rr(&mut self, mem_bus : &MemoryBus, rr : &str) -> u32
+	{
+		let short = self.pop_short(mem_bus);
+		match rr
+		{
+			"AF" =>	self.reg.set_af(short),
+			"BC" =>	self.reg.set_bc(short),
+			"DE" =>	self.reg.set_de(short),
+			"HL" =>	self.reg.set_hl(short),
+			_ => 
+			{
+				println!("REGISTER {} doesn't exist !", rr);
+				process::exit(1);
+			}
+		}
+		12
+	}
+
+    pub fn push_rr(&mut self, mem_bus : &mut MemoryBus, rr : u16) -> u32
+    {
+        self.push_short(mem_bus, rr);
+        16
+    }
+
     pub fn ld_r_to_r(r_dst : &mut u8, r_src : u8) -> u32
     {
         *r_dst = r_src;
@@ -298,5 +392,19 @@ impl Cpu
         *r_dst = n;
         *pc += 1;
         8
+    }
+
+    pub fn rl_r(r : &mut u8, f : &mut Flag)
+    {
+        let old_carry = f.carry_flag;
+        f.set_caryy_flag((*r & 0x80) == 0x80);
+        *r = *r << 1;
+        if old_carry
+        {
+            *r |= 0x01;
+        }
+        f.set_zero_flag(*r == 0x00);
+        f.set_sub_flag(false);
+        f.set_half_carry_flag(false);
     }
 }
