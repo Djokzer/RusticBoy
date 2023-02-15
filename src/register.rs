@@ -29,6 +29,18 @@ impl Flag
 	{
 		Flag
 		{
+			value : 0x00, //0xb0
+			zero_flag : false, //true
+			sub_flag : false,
+			half_carry_flag : false, //true
+			carry_flag : false, //true
+		}
+	}
+
+	pub fn init_flag_without_bootrom() -> Flag
+	{
+		Flag
+		{
 			value : 0xb0,
 			zero_flag : true,
 			sub_flag : false,
@@ -79,18 +91,36 @@ impl Register
 	{
 		Register
 		{
-			a : 0x01,
+			a : 0x00, //0x01
 			f : Flag::init_flag(),
+			b : 0x00,
+			c : 0x00, //0x13
+			d : 0x00,
+			e : 0x00, //0xd8
+			h : 0x00, //0x01
+			l : 0x00, //0x4d
+			program_counter : 0x00, //0x100 if skip boot rom
+			stack_pointer : 0xFFFE,
+		}
+	}
+
+	pub fn init_register_without_bootrom() -> Register
+	{
+		Register
+		{
+			a : 0x01,
+			f : Flag::init_flag_without_bootrom(),
 			b : 0x00,
 			c : 0x13,
 			d : 0x00,
 			e : 0xd8,
 			h : 0x01,
 			l : 0x4d,
-			program_counter : 0x00, //0x100 if skip boot rom
+			program_counter : 0x100,
 			stack_pointer : 0xFFFE,
 		}
 	}
+
 
 	pub fn get_af(&self) -> u16
 	{

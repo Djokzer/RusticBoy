@@ -40,9 +40,11 @@ impl Emulator
 		f.read(&mut buffer).expect("buffer overflow");
 
 		// LOAD BOOT ROM
-		for i in 0x0000..0x0100
+		//println!("MEMORY MAP BEFORE : BOOT ROM ---------------------------");
+		for i in 0x0..0x100
 		{
 			self.mem_bus.write_byte(i, buffer[i as usize]);
+			//println!("AT {:0x} : {:02x}", i, self.mem_bus.read_byte(i));
 		}
 
 		return true;

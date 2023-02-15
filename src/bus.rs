@@ -57,6 +57,11 @@ impl MemoryBus
 
 	pub fn write_byte(&mut self, address : u16, value : u8)
 	{
+		if address < 0x100
+		{
+			println!("ADDRESS {:0x} : VAL {:02x}", address, value);
+		}
+
 		match address
 		{
 			0x0000..=0x3FFF => self.rom_bank_0[address as usize] = value,
@@ -76,7 +81,7 @@ impl MemoryBus
 	{
 		let hl: u8 = ((value >> 8) & 0x00FF) as u8;
 		let lo: u8 = (value & 0x00FF) as u8;
-		self.write_byte(address, hl);
-		self.write_byte(address + 1, lo);
+		self.write_byte(address, lo);
+		self.write_byte(address + 1, hl);
 	}
 }
