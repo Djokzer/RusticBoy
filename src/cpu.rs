@@ -38,8 +38,8 @@ impl Cpu
 			0x00 => 4, //NOP
 			0x01 => // LD BC, d16
 			{
-				self.reg.set_bc(mem_bus.read_short(nn));
 				self.reg.program_counter += 2;
+				self.reg.set_bc(nn);
 				12   
 			},
 			0x03 => self.inc_rr("BC"),// INC BC
@@ -78,7 +78,7 @@ impl Cpu
 			}
 			0x11 => // LD DE, d16
 			{ 
-				self.reg.set_de(mem_bus.read_short(nn));
+				self.reg.set_de(nn);
 				self.reg.program_counter += 2;
 				12   
 			},
@@ -102,6 +102,7 @@ impl Cpu
 			},
 			0x18 => // JR r8,
 			{
+				self.reg.program_counter += 1;
 				self.reg.program_counter = Cpu::add_signed(self.reg.program_counter, n); //RELATIVE JUMP
 				12
 			},
@@ -151,12 +152,12 @@ impl Cpu
 			0x26 => Cpu::ld_n_to_r(&mut self.reg.h, n, &mut self.reg.program_counter),   // LD H,d8
 			0x28 => // JR Z, r8,
 			{
+				self.reg.program_counter += 1;
 				if self.reg.f.zero_flag
 				{
 					self.reg.program_counter = Cpu::add_signed(self.reg.program_counter, n); //RELATIVE JUMP
 					return 12;
 				}
-				self.reg.program_counter += 1;
 				return  8;
 			},
 			0x2c => Cpu::inc_r(&mut self.reg.f, &mut self.reg.l),	// INC L
@@ -164,12 +165,12 @@ impl Cpu
 			0x2e => Cpu::ld_n_to_r(&mut self.reg.l, n, &mut self.reg.program_counter), // LD L, d8
 			0x30 => // JR NC, r8,
 			{
+				self.reg.program_counter += 1;
 				if !self.reg.f.carry_flag
 				{
 					self.reg.program_counter = Cpu::add_signed(self.reg.program_counter, n); //RELATIVE JUMP
 					return 12;
 				}
-				self.reg.program_counter += 1;
 				return  8;
 			},
 			0x31 => // LD SP, d16
@@ -196,12 +197,12 @@ impl Cpu
 			},
 			0x38 => // JR C, r8,
 			{
+				self.reg.program_counter += 1;
 				if self.reg.f.carry_flag
 				{
 					self.reg.program_counter = Cpu::add_signed(self.reg.program_counter, n); //RELATIVE JUMP
 					return 12;
 				}
-				self.reg.program_counter += 1;
 				return  8;
 			},
 			0x3C => Cpu::inc_r(&mut self.reg.f, &mut self.reg.a), // INC A
@@ -248,7 +249,7 @@ impl Cpu
 			0xC9 =>	// RET
 			{
 				self.reg.program_counter = self.pop_short(mem_bus);
-				println!("RET : {:0x}", self.reg.program_counter);
+				//println!("RET : {:0x}", self.reg.program_counter);
 				16
 			},
 			0xCB => self.cb_inst_set(mem_bus),      // 0xCB INSTRCTION SET
@@ -257,7 +258,7 @@ impl Cpu
 				self.reg.program_counter += 2;
 				self.push_short(mem_bus, self.reg.program_counter);
 				self.reg.program_counter = nn;
-				println!("CALL : {:0x}", self.reg.program_counter);
+				//println!("CALL : {:0x}", self.reg.program_counter);
 				24
 
 			},
@@ -305,7 +306,7 @@ impl Cpu
 	pub fn cb_inst_set(&mut self, mem_bus : &mut MemoryBus) -> u32
 	{
 		let op = mem_bus.read_byte(self.reg.program_counter);
-		println!("CB Opcode : {:02x}", op);    //DEBUG
+		//println!("CB Opcode : {:02x}", op);    //DEBUG
 		self.reg.program_counter += 1;
 
 		match op 

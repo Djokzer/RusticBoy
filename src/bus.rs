@@ -57,10 +57,12 @@ impl MemoryBus
 
 	pub fn write_byte(&mut self, address : u16, value : u8)
 	{
+		/*
 		if address < 0x100
 		{
 			println!("ADDRESS {:0x} : VAL {:02x}", address, value);
 		}
+		*/
 
 		match address
 		{

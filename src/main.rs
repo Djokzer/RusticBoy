@@ -21,6 +21,22 @@ fn window_conf() -> Conf {
     }
 }
 
+/* fn main()
+{
+    let mut gb_emulator : Emulator = Emulator::init_emulator();
+    if !gb_emulator.load_boot_rom("roms/dmg_boot.bin")  //roms/dmg_boot.bin
+    {
+        gb_emulator.cpu.reg = Register::init_register_without_bootrom(); // SKIP ROM BOOT
+    }
+    gb_emulator.load_rom("roms/tetris.gb"); // LOAD ROM
+
+    loop 
+    {   
+        gb_emulator.emulation_cycle();
+    }
+} */
+
+
 #[macroquad::main(window_conf)]
 async fn main() 
 {
@@ -52,11 +68,10 @@ async fn main()
     let mut cycles : u32 = 0;
     let mut start_time = SystemTime::now();
 
-    loop {
-        // CLEAR SCREEN
-        clear_background(BLACK);
-
-
+    // CLEAR SCREEN
+    clear_background(BLACK);
+    loop 
+    {
         // EMULATION CYCLE
         cycles += gb_emulator.emulation_cycle();
 
@@ -68,6 +83,7 @@ async fn main()
             gb_texture.update(&gb_image);
             draw_texture(gb_texture, 0.0, 0.0, WHITE);
 
+
             // WAIT
             let elapsed_time = start_time.elapsed().unwrap().as_nanos() as u64;
             if elapsed_time < TARGET_WAIT_TIME
@@ -75,17 +91,16 @@ async fn main()
                 let sleep_time = Duration::from_nanos(TARGET_WAIT_TIME - elapsed_time);
                 std::thread::sleep(sleep_time);
             }
+            start_time = SystemTime::now(); 
 
-            start_time = SystemTime::now();
-        }
+            // UPDATE
+            next_frame().await
+        } 
 
         // CHECK IF ESC
         if is_key_down(KeyCode::Escape)
         {
             break;
         }
-
-        // UPDATE
-        next_frame().await
     }
 }
