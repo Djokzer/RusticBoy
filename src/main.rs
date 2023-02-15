@@ -7,7 +7,6 @@ mod cpu;
 use std::{time::{SystemTime, Duration}};
 use macroquad::{prelude::*};
 use emulator::Emulator;
-use register::Register;
 
 const SIZE : (i32, i32) = (1920, 1080);
 

@@ -222,6 +222,22 @@ impl Cpu
 			0x4C => Cpu::ld_r_to_r(&mut self.reg.c, self.reg.h),	// LD C,H
 			0x4D => Cpu::ld_r_to_r(&mut self.reg.c, self.reg.l),	// LD C,L
 			0x4F => Cpu::ld_r_to_r(&mut self.reg.c, self.reg.a),	// LD C,A
+			0x50 => Cpu::ld_r_to_r(&mut self.reg.d, self.reg.b),	// LD D,B
+			0x51 => Cpu::ld_r_to_r(&mut self.reg.d, self.reg.c),	// LD D,C	
+			0x52 => 4,														   // LD D,D (NOP)
+			0x53 => Cpu::ld_r_to_r(&mut self.reg.d, self.reg.e),	// LD D,E	
+			0x54 => Cpu::ld_r_to_r(&mut self.reg.d, self.reg.h),	// LD D,H	
+			0x55 => Cpu::ld_r_to_r(&mut self.reg.d, self.reg.l),	// LD D,L	
+			0x56 => self.ld_mem_hl_to_r(mem_bus, "D"),						// LD D,(HL)		
+			0x57 => Cpu::ld_r_to_r(&mut self.reg.d, self.reg.b),	// LD D,A	
+			0x60 =>	Cpu::ld_r_to_r(&mut self.reg.h, self.reg.b),	// LD H,B
+			0x61 =>	Cpu::ld_r_to_r(&mut self.reg.h, self.reg.c),	// LD H,C
+			0x62 =>	Cpu::ld_r_to_r(&mut self.reg.h, self.reg.d),	// LD H,D
+			0x63 =>	Cpu::ld_r_to_r(&mut self.reg.h, self.reg.e),	// LD H,E
+			0x64 =>	4,														   // LD H,H (NOP)
+			0x65 =>	Cpu::ld_r_to_r(&mut self.reg.h, self.reg.l),	// LD H,L
+			0x66 => self.ld_mem_hl_to_r(mem_bus, "H"),						// LD H,(HL)
+			0x67 =>	Cpu::ld_r_to_r(&mut self.reg.h, self.reg.a),	// LD H,A
 			0x70 => self.ld_r_to_mem_hl(mem_bus, self.reg.b),  			// LD (HL), B
 			0x71 => self.ld_r_to_mem_hl(mem_bus, self.reg.c),  			// LD (HL), C
 			0x72 => self.ld_r_to_mem_hl(mem_bus, self.reg.d),  			// LD (HL), D
@@ -229,14 +245,14 @@ impl Cpu
 			0x74 => self.ld_r_to_mem_hl(mem_bus, self.reg.h),  			// LD (HL), H
 			0x75 => self.ld_r_to_mem_hl(mem_bus, self.reg.l),  			// LD (HL), L
 			0x77 => self.ld_r_to_mem_hl(mem_bus, self.reg.a),  			// LD (HL), A
-			0x78 => Cpu::ld_r_to_r(&mut self.reg.a, self.reg.b),	// LD A, B
-			0x79 => Cpu::ld_r_to_r(&mut self.reg.a, self.reg.c),	// LD A, C
-			0x7A => Cpu::ld_r_to_r(&mut self.reg.a, self.reg.d),	// LD A, D
-			0x7B => Cpu::ld_r_to_r(&mut self.reg.a, self.reg.e),	// LD A, E
-			0x7C => Cpu::ld_r_to_r(&mut self.reg.a, self.reg.h),	// LD A, H
-			0x7D => Cpu::ld_r_to_r(&mut self.reg.a, self.reg.l),	// LD A, L
+			0x78 => Cpu::ld_r_to_r(&mut self.reg.a, self.reg.b),	// LD A,B
+			0x79 => Cpu::ld_r_to_r(&mut self.reg.a, self.reg.c),	// LD A,C
+			0x7A => Cpu::ld_r_to_r(&mut self.reg.a, self.reg.d),	// LD A,D
+			0x7B => Cpu::ld_r_to_r(&mut self.reg.a, self.reg.e),	// LD A,E
+			0x7C => Cpu::ld_r_to_r(&mut self.reg.a, self.reg.h),	// LD A,H
+			0x7D => Cpu::ld_r_to_r(&mut self.reg.a, self.reg.l),	// LD A,L
 			0x7E => self.ld_mem_rr_to_a(mem_bus, self.reg.get_hl()),	    // LD A, (HL)
-			0x7F => 4,														   // LD A, A (NOP)
+			0x7F => 4,														   // LD A,A (NOP)
 			0xA8 => self.xor_a_r(self	.reg.b), // XOR A, B
 			0xA9 => self.xor_a_r(self.reg.c),  // XOR A, C
 			0xAA => self.xor_a_r(self.reg.d),  // XOR A, D
@@ -253,7 +269,7 @@ impl Cpu
 				16
 			},
 			0xCB => self.cb_inst_set(mem_bus),      // 0xCB INSTRCTION SET
-			0xCD => //  CALL d16
+			0xCD => // CALL d16
 			{
 				self.reg.program_counter += 2;
 				self.push_short(mem_bus, self.reg.program_counter);
@@ -276,7 +292,13 @@ impl Cpu
 				mem_bus.write_byte(0xFF00 + self.reg.c as u16, self.reg.a);
 				8
 			},
-			0xE5 => self.push_rr(mem_bus, self.reg.get_hl()),   // PUSH HL
+			0xE5 => self.push_rr(mem_bus, self.reg.get_hl()),	// PUSH HL
+			0xEA =>	// LD (a16), A
+			{
+				self.reg.program_counter += 2;
+				mem_bus.write_byte(nn, self.reg.a);
+				16	
+			}
 			0xF0 => // LDH A,(a8)
 			{
 				self.reg.a = mem_bus.read_byte(0xFF00 + n as u16);
@@ -401,6 +423,25 @@ impl Cpu
 	pub fn ld_mem_rr_to_a(&mut self, mem_bus : &MemoryBus, rr : u16) -> u32
 	{
 		self.reg.a = mem_bus.read_byte(rr);
+		8
+	}
+
+	pub fn ld_mem_hl_to_r(&mut self, mem_bus : &MemoryBus, r : &str) -> u32
+	{
+		match r 
+		{
+			"A" =>	self.reg.a = mem_bus.read_byte(self.reg.get_hl()),
+			"B" =>	self.reg.b = mem_bus.read_byte(self.reg.get_hl()),
+			"C" =>	self.reg.c = mem_bus.read_byte(self.reg.get_hl()),
+			"D" =>	self.reg.d = mem_bus.read_byte(self.reg.get_hl()),
+			"H" =>	self.reg.h = mem_bus.read_byte(self.reg.get_hl()),
+			"L" =>	self.reg.l = mem_bus.read_byte(self.reg.get_hl()),
+			_ => 
+			{
+				println!("Unknown register {} !", r);
+				process::exit(1);
+			}	
+		} 
 		8
 	}
 
