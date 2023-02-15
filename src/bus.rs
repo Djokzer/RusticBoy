@@ -40,6 +40,12 @@ impl MemoryBus
 			self.boot_rom[i] = boot_rom[i];
 		}
 	}
+
+	pub fn init_bus_without_bootrom(&mut self)
+	{
+		// ! TO DO
+		self.write_byte(0xFF50, 1);	// DISABLE BOOT ROM
+	}
 	
 	pub fn read_byte(&self, address : u16) -> u8
 	{

@@ -1,6 +1,7 @@
 use crate::cartridge::*;
 use crate::bus::*;
 use crate::cpu::*;
+use crate::register::*;
 
 use std::{fs::{metadata, File}, io::Read};
 
@@ -23,6 +24,12 @@ impl Emulator
 			mem_bus : MemoryBus::init_bus(),
 			cpu : Cpu::init_cpu(),
 		}
+	}
+
+	pub fn init_emulator_without_bootrom(&mut self)
+	{
+		self.cpu.reg = Register::init_register_without_bootrom();
+		self.mem_bus.init_bus_without_bootrom();
 	}
 
 	pub fn load_boot_rom(&mut self, filename : &str) -> bool
