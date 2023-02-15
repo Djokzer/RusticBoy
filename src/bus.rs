@@ -1,6 +1,7 @@
 
 pub struct MemoryBus
 {
+	pub boot_rom : [u8; 0x100],			// 256 bytes of BOOT ROM
 	pub rom_bank_0 : [u8; 0x4000],		//16KB ROM Bank 0			(0x0000	-	0x3FFF)
 	pub rom_bank_n : [u8; 0x4000],		//16KB ROM Bank N			(0x4000	-	0x7FFF)
 	pub vram : [u8; 0x2000],			//8KB Video RAM 			(0x8000	-	0x9FFF)
@@ -19,6 +20,7 @@ impl MemoryBus
 	{
 		MemoryBus
 		{
+			boot_rom : [0; 0x100],
 			rom_bank_0 : [0; 0x4000],
 			rom_bank_n : [0; 0x4000],
 			vram : [0; 0x2000],
@@ -30,12 +32,27 @@ impl MemoryBus
 			interrupt_enable : 0,
 		}
 	}
+
+	pub fn load_boot_rom(&mut self, boot_rom : Vec<u8>)
+	{
+		for i in 0x0..0x100
+		{
+			self.boot_rom[i] = boot_rom[i];
+		}
+	}
 	
 	pub fn read_byte(&self, address : u16) -> u8
 	{
 		match address
 		{
-			0x0000..=0x3FFF => self.rom_bank_0[address as usize],
+			0x0000..=0x3FFF => 
+			{
+				if self.read_byte(0xFF50) == 0 && address < 0x100
+				{
+					return self.boot_rom[address as usize];
+				}
+				return self.rom_bank_0[address as usize];
+			},
 			0x4000..=0x7FFF => self.rom_bank_n[address as usize - 0x4000],
 			0x8000..=0x9FFF => self.vram[address as usize - 0x8000],
 			0xA000..=0xBFFF => self.ext_ram[address as usize - 0xA000],
