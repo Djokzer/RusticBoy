@@ -20,22 +20,6 @@ fn window_conf() -> Conf {
     }
 }
 
-/* fn main()
-{
-    let mut gb_emulator : Emulator = Emulator::init_emulator();
-    if !gb_emulator.load_boot_rom("roms/dmg_boot.bin")  //roms/dmg_boot.bin
-    {
-        gb_emulator.cpu.reg = Register::init_register_without_bootrom(); // SKIP ROM BOOT
-    }
-    gb_emulator.load_rom("roms/tetris.gb"); // LOAD ROM
-
-    loop 
-    {   
-        gb_emulator.emulation_cycle();
-    }
-} */
-
-
 #[macroquad::main(window_conf)]
 async fn main() 
 {
