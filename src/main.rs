@@ -4,13 +4,14 @@ mod bus;
 mod register;
 mod cpu;
 
-use std::{time::{SystemTime, Duration}};
-use macroquad::{prelude::*};
+use std::time::{SystemTime, Duration};
+use macroquad::prelude::*;
 use emulator::Emulator;
 
 const SIZE : (i32, i32) = (1920, 1080);
 
-fn window_conf() -> Conf {
+fn window_conf() -> Conf 
+{
     Conf {
         window_title: "RusticBoy".to_owned(),
         window_width : SIZE.0,
@@ -44,8 +45,8 @@ async fn main()
     }
     gb_emulator.load_rom("roms/tetris.gb"); // LOAD ROM
 
-    // CLOCK
-    const CLOCK_SPEED: u32 = 4_194_304; // Hz
+    // CLOCK    
+    const CLOCK_SPEED: u32 = 4_194_304;   // Hz
     const CYCLES_PER_FRAME: u32 = 70224;  // (CLOCK SPEED / REFRESH RATE)
     const TARGET_WAIT_TIME: u64 = 1666666667;
     let mut cycles : u32 = 0;
