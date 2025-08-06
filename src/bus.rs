@@ -7,7 +7,7 @@ pub struct MemoryBus
 	pub vram : [u8; 0x2000],			//8KB Video RAM 			(0x8000	-	0x9FFF)
 	pub ext_ram : [u8; 0x2000],			//8KB External RAM			(0xA000	-	0xBFFF)
 	pub work_ram : [u8; 0x2000],		//8KB Work RAM				(0xC000	-	0xDFFF)
-	pub sprite_attrib_ram : [u8; 0xa0],	//159B Sprite Attrib RAM	(0xFE00	-	0xFE9F)
+	pub sprite_attrib_ram : [u8; 0xa0],	//160B Sprite Attrib RAM	(0xFE00	-	0xFE9F)
 	pub io_registers : [u8; 0x80],		//127B I/O Registers		(0xFF00	-	0xFF7F)
 	pub high_ram : [u8; 0x80],			//126B High RAM				(0xFF80	-	0xFFFE)
 	pub interrupt_enable : u8,			//1B Interrupt Enable		(0xFFFF)

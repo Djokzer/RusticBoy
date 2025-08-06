@@ -3,12 +3,13 @@ mod cartridge;
 mod bus;
 mod register;
 mod cpu;
+mod ppu;
 
 use std::time::{SystemTime, Duration};
 use macroquad::prelude::*;
 use emulator::Emulator;
 
-const SIZE : (i32, i32) = (160, 140);
+const SIZE : (i32, i32) = (160, 144);
 
 fn window_conf() -> Conf 
 {
@@ -25,12 +26,12 @@ fn window_conf() -> Conf
 async fn main() 
 {
     // TEMPORARY GAMEBOY BUFFER
-    let buffer = vec![255; 160 * 140 * 4];
+    let buffer = vec![255; 160 * 144 * 4];
 
     // GAMEBOY RENDER IMAGE
     let gb_image = Image{
         width : 160,
-        height : 140,
+        height : 144,
         bytes : buffer,
     };
 

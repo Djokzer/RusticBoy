@@ -2,6 +2,7 @@ use crate::cartridge::*;
 use crate::bus::*;
 use crate::cpu::*;
 use crate::register::*;
+use crate::ppu::*;
 
 use std::{fs::{metadata, File}, io::Read};
 
@@ -10,6 +11,7 @@ pub struct Emulator
 	pub cart : Cartridge,
 	pub mem_bus : MemoryBus,
 	pub cpu: Cpu,
+	pub ppu: PPU,
 	// ! TO DO
 }
 
@@ -23,6 +25,7 @@ impl Emulator
 			cart : Cartridge::init_cartridge(),
 			mem_bus : MemoryBus::init_bus(),
 			cpu : Cpu::init_cpu(),
+			ppu : PPU::init_ppu(),
 		}
 	}
 
