@@ -8,7 +8,7 @@ use std::time::{SystemTime, Duration};
 use macroquad::prelude::*;
 use emulator::Emulator;
 
-const SIZE : (i32, i32) = (1920, 1080);
+const SIZE : (i32, i32) = (160, 140);
 
 fn window_conf() -> Conf 
 {

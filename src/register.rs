@@ -67,7 +67,7 @@ impl Flag
 		if val {self.value |= 0x20;}
 		else {self.value &= !0x20;}
 	}
-	pub fn set_caryy_flag(&mut self, val : bool)
+	pub fn set_carry_flag(&mut self, val : bool)
 	{
 		self.carry_flag = val;
 		if val {self.value |= 0x10;}
@@ -80,7 +80,7 @@ impl Flag
 		self.set_zero_flag((self.value & 0x80) == 0x80);
 		self.set_sub_flag((self.value & 0x40) == 0x40);
 		self.set_half_carry_flag((self.value & 0x20) == 0x20);
-		self.set_caryy_flag((self.value & 0x10) == 0x10);
+		self.set_carry_flag((self.value & 0x10) == 0x10);
 	}
 }
 
@@ -124,7 +124,7 @@ impl Register
 
 	pub fn get_af(&self) -> u16
 	{
-		return ((self.h as u16) << 8) | self.f.value as u16;
+		return ((self.a as u16) << 8) | self.f.value as u16;
 	}
 	pub fn get_bc(&self) -> u16
 	{

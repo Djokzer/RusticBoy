@@ -48,7 +48,7 @@ impl Cpu
 			0x06 => Cpu::ld_n_to_r(&mut self.reg.b, n, &mut self.reg.program_counter),   // LD B,d8
 			0x07 =>	// RLCA
 			{
-				self.reg.f.set_caryy_flag((self.reg.a & 0x80) == 0x80);
+				self.reg.f.set_carry_flag((self.reg.a & 0x80) == 0x80);
 				self.reg.a = self.reg.a << 1;
 				if self.reg.f.carry_flag
 				{
@@ -65,7 +65,7 @@ impl Cpu
 			0x0e => Cpu::ld_n_to_r(&mut self.reg.c, n, &mut self.reg.program_counter),  // LD C, d8
 			0x0F =>	// RRCA
 			{
-				self.reg.f.set_caryy_flag((self.reg.a & 0x01) == 0x01);
+				self.reg.f.set_carry_flag((self.reg.a & 0x01) == 0x01);
 				self.reg.a = self.reg.a >> 1;
 				if self.reg.f.carry_flag
 				{
@@ -89,7 +89,7 @@ impl Cpu
 			0x17 =>	// RLA
 			{
 				let old_carry = self.reg.f.carry_flag;
-				self.reg.f.set_caryy_flag((self.reg.a & 0x80) == 0x80);
+				self.reg.f.set_carry_flag((self.reg.a & 0x80) == 0x80);
 				self.reg.a = self.reg.a << 1;
 				if old_carry
 				{
@@ -113,7 +113,7 @@ impl Cpu
 			0x1F =>	// RRA
 			{
 				let old_carry = self.reg.f.carry_flag;
-				self.reg.f.set_caryy_flag((self.reg.a & 0x01) == 0x01);
+				self.reg.f.set_carry_flag((self.reg.a & 0x01) == 0x01);
 				self.reg.a = self.reg.a >> 1;
 				if old_carry
 				{
@@ -362,7 +362,7 @@ impl Cpu
 		self.reg.f.set_zero_flag(self.reg.a == 0);
 		self.reg.f.set_sub_flag(false); 
 		self.reg.f.set_half_carry_flag(false);
-		self.reg.f.set_caryy_flag(false);
+		self.reg.f.set_carry_flag(false);
 		return 4;
 	}
 
@@ -499,7 +499,7 @@ impl Cpu
 	pub fn rl_r(r : &mut u8, f : &mut Flag)
 	{
 		let old_carry = f.carry_flag;
-		f.set_caryy_flag((*r & 0x80) == 0x80);
+		f.set_carry_flag((*r & 0x80) == 0x80);
 		*r = *r << 1;
 		if old_carry
 		{
@@ -514,7 +514,7 @@ impl Cpu
 	{
 		self.reg.f.set_zero_flag(self.reg.a == val);
 		self.reg.f.set_sub_flag(true);
-		self.reg.f.set_caryy_flag(self.reg.a < val);
+		self.reg.f.set_carry_flag(self.reg.a < val);
 		self.reg.f.set_half_carry_flag((self.reg.a & 0x0F) < (val & 0x0F))
 	}
 
